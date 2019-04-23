@@ -7,6 +7,41 @@
 #include "Structures/Population.h"
 using namespace std;
 
+
+
+// PopulationOptions
+// {
+//     int popsize;
+//     int mutationRate; 
+//     int maxIterations;
+//     int maxFitness;
+//     initialisationOptions {
+//                                  bool equitable;
+//                                  bool feasible;
+//                                  };
+//     void (*mutationMethode)(Individual*);// methode de mutation
+//     vector<Individual> (*crossOverFunction)(Individual*,Individual*);// Fonction de Cross over
+//     Individual* (*selectionFunction)(Population *);// Fonction de selection 
+//     void (*childrenIntegrationMethode) (Population *,vector<Individual>); Methode d'integration des enfants 
+//     bool (*stopCrterion)(Population*);  // critere de stop
+// }
+
+// int main(){
+//     float temps;
+//     clock_t t1,t2;
+//     char nomFichier[255]= "../test.col";
+//     Graph g(nomFichier);
+//     PopulationOptions op;
+//     Population p(&g,&op);
+//     p.train();
+//     p.printFinalResult();
+
+//     return(1);
+
+
+// }
+
+
 void setOptions(PopulationOptions * op){
     op->maxFitness=200;
     op->maxIterations=200;
@@ -20,13 +55,14 @@ void setOptions(PopulationOptions * op){
     
 }
 
+
 int main(){
     float temps;
     clock_t t1,t2;
-    char nomFichier[255]= "../test.col";
+    char nomFichier[255]= "../DSJC1000.1.col";
     Graph g(nomFichier);
     cout<<"V: "<<g.numberofVertics<<endl;
-    g.printEdges();
+    //g.printEdges();
     g.powellWelshColoring();
     g.greedyColoring();
     PopulationOptions op;
@@ -35,29 +71,42 @@ int main(){
     cout<<p.graph->numberofVertics<<endl;
     
     Individual parent1(&g,g.GR);
-
+    
     Individual parent2(&g,g.PW);
+    
     cout<<"------parent1-----"<<endl;
     parent1.printChromosome();
+    cout<<"chromatique number Begin: "<<parent1.colorSet.size()<<"\n\n\n\n";
+    parent1.makeTheColorationEquitableUsingHeuristicMethode();
+    cout<<"nbr bad edges: "<<parent1.nbBadEdges()<<endl;
+    parent1.printChromosome();
+    cout<<"\n\n\nnchromatique number END: "<<parent1.colorSet.size()<<"\n\n\n\n";
     //parent1.printFitness();
-    cout<<endl<<"------parent2-----"<<endl;
+    cout<<endl<<"\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n------parent2-----"<<endl;
+    cout<<"chromatique number Begin: "<<parent2.colorSet.size()<<"\n\n\n\n";
     parent2.printChromosome();
+    parent2.makeTheColorationEquitableUsingHeuristicMethode();
+    cout<<"nbr bad edges: "<<parent2.nbBadEdges()<<endl;
+    parent2.printChromosome();
+    cout<<"\n\n\nnchromatique number END: "<<parent2.colorSet.size()<<"\n\n\n\n";
+    
+    
     //parent2.printFitness();
-    vector<Individual> childrens ;
-    childrens = p.parameters->crossOverFunction(&parent1,&parent2);
-     cout<<childrens.size()<<endl;
-    for(auto & child : childrens)
-    {
-        cout<<endl<<endl<<"printing child"<<endl;
-        child.printChromosome();
-    }
-    for(int i=1;i<=parent1.maxColor;i++){
-        cout<<"la couleur "<<i<<" :{"<<endl;
-        for  (auto & j:parent1.colorsClass[i]){
-            cout<<"la sommet:"<<j<<", ";
-        }
-        cout<<"}"<<endl;
-    }
+    // vector<Individual> childrens ;
+    // childrens = p.parameters->crossOverFunction(&parent1,&parent2);
+    //  cout<<childrens.size()<<endl;
+    // for(auto & child : childrens)
+    // {
+    //     cout<<endl<<endl<<"printing child"<<endl;
+    //     child.printChromosome();
+    // }
+    // for(int i=1;i<=parent1.maxColor;i++){
+    //     cout<<"la couleur "<<i<<" :{"<<endl;
+    //     for  (auto & j:parent1.colorsClass[i]){
+    //         cout<<"la sommet:"<<j<<", ";
+    //     }
+    //     cout<<"}"<<endl;
+    // }
     // graph g();
     // population p(g,CreerIndividue_methode,fitness_func,populationStruct,)
     // Population p(nomFichier,1001,10,300);

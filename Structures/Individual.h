@@ -13,15 +13,15 @@ using namespace std;
 class Individual
 {   
     int * sortedCopie;
-    
+    int counterForColorsOccurence;
     public:
-    int maxColor;
+        int maxColor;
         Graph * graph;
         int * chromosome;
         int fitness;
         list<int> * colorsClass;//array of vertics indexed by colors 
-        set<int> color_set;
-        int ** colors_occurence;
+        set<int> colorSet;
+        int ** colorsOccurences;
     //----------------    
         Individual(Graph * graph, int * chromosome); 
         int cal_fitness(); 
@@ -33,6 +33,13 @@ class Individual
         bool operator < (const Individual&) const;
         void printFitness();
         void printChromosome();
+        void makeTheColorationEquitableUsingHeuristicMethode();
+        bool canColorizeTheVerticByTheColor(int vertic,int color);
+        void colorizeTheVerticByTheColor(int vertic,int newcolor,int oldColor);
+        void createNewColor();
+        void printColorSet();
+        void printColorClasses();
+        void printColorOccurence();
          
 };
 
@@ -43,19 +50,19 @@ class Individual
 Individual::Individual(Graph * graph, int * chromosome){
     this->graph=graph;
     this->chromosome=new int[graph->numberofVertics];
+    colorsClass= new list<int>[graph->numberofVertics];
     int i;
     maxColor=0;
     for( i=1; i<graph->numberofVertics+1;i++){
         this->chromosome[i]=chromosome[i];
-        color_set.insert(chromosome[i]);
+        colorSet.insert(chromosome[i]);
         if(maxColor<chromosome[i])maxColor=chromosome[i];
     }
-    cout<<maxColor<<endl;
-    colorsClass= new list<int>[maxColor+1];
     for( i=1; i<graph->numberofVertics+1;i++){
         colorsClass[chromosome[i]].push_back(i);
     }
-    cout<<color_set.size()<<" ? "<<endl;
+    colorsOccurences= new int * [graph->numberofVertics];
+    initColorsOccurence();
     fitness=cal_fitness();
 };
 
@@ -63,23 +70,23 @@ Individual::Individual(Graph * graph, int * chromosome){
 
 void Individual::initColorsOccurence(){
 
-    colors_occurence= new int * [maxColor];
-    for (int i=1;i<=maxColor;i++){
-        colors_occurence[i-1]=new int [2];
-        colors_occurence[i-1][0]=i;
-        colors_occurence[i-1][1]=colorsClass[i].size();
+    
+    counterForColorsOccurence=0;
+    for(auto x:colorSet){
+        colorsOccurences[counterForColorsOccurence]=new int [2];
+        colorsOccurences[counterForColorsOccurence][0]=x;
+        colorsOccurences[counterForColorsOccurence][1]=colorsClass[x].size();
+        counterForColorsOccurence++;
     }
-    cout<<"mrigle"<<endl;
-    quicksort_Matrix_Nx2(colors_occurence,0,graph->chromaticNumber-1);
+    quicksort_Matrix_Nx2(colorsOccurences,0,counterForColorsOccurence-1);
 };
 
 int Individual::classMax(){
-    initColorsOccurence();
-    return colors_occurence[graph->chromaticNumber-1][1];
+    return colorsOccurences[colorSet.size()-1][1];
 }
 
 int Individual::classMin(){
-    return colors_occurence[0][1];
+    return colorsOccurences[0][1];
 }
 
 int Individual::getNbrChromatique(){
@@ -89,35 +96,14 @@ int Individual::getNbrChromatique(){
 }
 
 int Individual::nbBadEdges(){
-    //cout<<"dkhalbad: "<<graph->fileName<<endl;
-    int copie[graph->numberofVertics];
-    int i;
     int result=0;
-    ifstream fich(graph->fileName,ios::in);  // on ouvre le fichier en lecture
-    cout<<graph->fileName;
-    if(fich)  // si l'ouverture a réussi
-    {
-        //cout << "on a pu ouvrir le fichier\n";
-        string ligne;
-        int s1,s2;
-        while(getline(fich, ligne)){
-            if (ligne[0]=='e'){
-                s1=sommet(ligne,2);
-                s2=sommet(ligne,3);
-                
-                if(chromosome[s1]==chromosome[s2]){
-                    cout<<"bad edge e "<<s1<<" "<<s2<<endl;
-                    result++;
-                }
-            }
+    for(auto &i:graph->edges){
+         if(chromosome[i.first]==chromosome[i.second]){
+            cout<<"bad edge e "<<i.first<<" "<<i.second<<endl;
+            result++;
         }
-        fich.close();  // on ferme le fichier 
-    }
-    else {
-            cout << graph->fileName;
-            cerr << "Impossible d'ouvrir le fichier !" << endl;}
-    cout<<"dkhalbad"<<endl;
-    return(result);      
+    }          
+    return result; 
 };
 
 
@@ -129,21 +115,108 @@ int Individual::cal_fitness(){
 
 
 
+
+
+bool Individual::canColorizeTheVerticByTheColor(int vertic,int color)
+
+{
+    if(chromosome[vertic]==color)return false;
+    for(auto verticsColoredByColor:colorsClass[color]){
+        for(auto verticsPairedToVertic:graph->adj[vertic]){
+            if (verticsColoredByColor==verticsPairedToVertic)
+            return false;
+        }
+    }
+    
+    return true;
+}
+
+void Individual::colorizeTheVerticByTheColor(int vertic,int newColor,int oldColor)
+{
+    colorsClass[oldColor].remove(vertic);
+    colorsClass[newColor].push_back(vertic);
+    chromosome[vertic]=newColor;
+    initColorsOccurence();
+    quicksort_Matrix_Nx2(colorsOccurences,0,counterForColorsOccurence-1);
+}
+
+void Individual::createNewColor()
+{
+    maxColor++;
+    int x =maxColor;
+    colorSet.insert(maxColor);
+    colorsOccurences[counterForColorsOccurence]=new int [2];
+    colorsOccurences[counterForColorsOccurence][0]=x;
+    colorsOccurences[counterForColorsOccurence][1]=colorsClass[x].size();
+    cout<<colorsOccurences[counterForColorsOccurence][0]<<" "<<colorsOccurences[counterForColorsOccurence][1]<<endl;
+    counterForColorsOccurence++;
+    quicksort_Matrix_Nx2(colorsOccurences,0,counterForColorsOccurence-1);
+}
+
+void Individual::makeTheColorationEquitableUsingHeuristicMethode(){
+    bool changeMaked=false;
+    int countUselessShuffle;
+    while ((classMax()-classMin())>1)
+    {
+        changeMaked=false;
+        for(int i = colorSet.size()-1 ;i>=colorSet.size()/2,colorsOccurences[i][1]==classMax() ;i--)
+        {
+            for(auto & vertic:colorsClass[colorsOccurences[i][0]])
+            {
+                for(int j = 0;j<=colorSet.size()/2,colorsOccurences[j][1]==classMin();j++ )
+                {
+                    if(canColorizeTheVerticByTheColor(vertic,colorsOccurences[j][0]))
+                    {  
+                        colorizeTheVerticByTheColor(vertic,colorsOccurences[j][0],colorsOccurences[i][0]);
+                        changeMaked=true;
+                    }
+                }
+                if(changeMaked)break;
+            }
+        }
+        if(!changeMaked)
+        {
+            createNewColor();
+        }
+    }
+};
 void Individual::printFitness(){
     cout<<"fitness: "<<this->fitness<<endl;
     
 };
-void Individual::printChromosome(){
-    for (int i=1;i<graph->numberofVertics;i++){
-        cout<<"["<<i<<": "<<chromosome[i]<<"] \t";
-        if(i%10==0)cout<<endl;
+
+void Individual::printColorSet(){
+    cout<<"the color set is:{ ";
+    for (auto &x: colorSet){
+        cout<<x<<", ";
+    }
+    cout<<"}\n";
+}
+
+void Individual::printColorClasses(){
+    cout<<"The color classes are below:"<<endl;
+    for (auto &x: colorSet){
+        cout<<x<<" "<<colorsClass[x].size()<<" : [";
+        for(auto &y:colorsClass[x]){
+            cout<<y<<", ";
+        }
+        cout<<"]"<<endl;
+    }
+}
+void Individual::printColorOccurence(){
+    cout<<"colorSet size: "<<colorSet.size()<<endl;
+    for(int i=0;i<colorSet.size();i++){
+        cout<<"["<<colorsOccurences[i][0]<<" , "<<colorsOccurences[i][1]<<"] ";
     }
     cout<<endl;
 }
 
-// bool Individual::operator<(const Individual& guest) const
-// {
-//     return this->fitness < guest.fitness;
-// }
-
+void Individual::printChromosome(){
+    cout<<"the colortion is:"<<endl;
+    for (int i=1;i<graph->numberofVertics+1;i++){
+        cout<<"["<<i<<": "<<chromosome[i]<<"] \t";
+        if(i%9==0)cout<<endl;
+    }
+    cout<<endl;
+}
 #endif

@@ -115,7 +115,6 @@ void Graph::construire(char * nomfichier){
         cout<<V;
         while(getline(fich, ligne)){
             if (ligne[0]=='e'){
-                cout<<"dkhal"<<endl;
                 s1=sommet(ligne,2);
                 s2=sommet(ligne,3);
                // cout << "adding " << s1 << " and " << s2 << "\n";

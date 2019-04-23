@@ -27,12 +27,6 @@ typedef struct PopulationOptions
 } PopulationOptions;
 
 
-
-
-
-
-
-
 class Population
 {
     public:
