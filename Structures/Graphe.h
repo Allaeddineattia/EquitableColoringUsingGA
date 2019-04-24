@@ -22,7 +22,7 @@ class Graph
     int *degres;
     int *PWVT;
     int *RandColors;
-    int chromaticNumber=3;
+    int chromaticNumber=1;
     char fileName[255];
     //Adjency matrix
 
@@ -88,7 +88,6 @@ void skipFileHeader(ifstream * in)
     ifstream& IN = *in;
     string inp;
     IN >> inp;
-    cout<<inp<<endl;
     while (!IN.eof() && inp!="edge"){
         IN >> inp;
     }
@@ -97,7 +96,7 @@ int getVertixNumber(ifstream * in){
     int res;
     ifstream& IN = *in;
     IN >> res;//read number of vertixs
-    cout<<"vertix number  :"<<res<<endl;
+    //cout<<"vertix number  :"<<res<<endl;
     return res;
 }
 void Graph::construire(char * nomfichier){
@@ -107,12 +106,12 @@ void Graph::construire(char * nomfichier){
         string ligne;
         int s1,s2;
         // instructions
-        cout << "on a pu ouvrir le fichier\n";
+        //cout << "on a pu ouvrir le fichier\n";
         skipFileHeader(&fich);
         numberofVertics=getVertixNumber(&fich);
         V=numberofVertics+1;
         adj = new list<int>[V+1]; 
-        cout<<V;
+        //cout<<V;
         while(getline(fich, ligne)){
             if (ligne[0]=='e'){
                 s1=sommet(ligne,2);

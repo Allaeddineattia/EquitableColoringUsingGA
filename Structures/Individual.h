@@ -14,6 +14,8 @@ class Individual
 {   
     int * sortedCopie;
     int counterForColorsOccurence;
+    void createNewColor();
+    void colorizeTheVerticByANewColor(int vertic,int newcolor,int oldColor);
     public:
         int maxColor;
         Graph * graph;
@@ -30,13 +32,15 @@ class Individual
         int classMin();
         int getNbrChromatique(); 
         void initColorsOccurence();  
-        bool operator < (const Individual&) const;
+        bool operator < (const Individual& I2) const{
+            return(this->fitness<I2.fitness);
+        };
         void printFitness();
         void printChromosome();
         void makeTheColorationEquitableUsingHeuristicMethode();
         bool canColorizeTheVerticByTheColor(int vertic,int color);
-        void colorizeTheVerticByTheColor(int vertic,int newcolor,int oldColor);
-        void createNewColor();
+        int getAVerticFromABadEdge();
+        void makeTheColorationRealisable();
         void printColorSet();
         void printColorClasses();
         void printColorOccurence();
@@ -49,11 +53,11 @@ class Individual
 
 Individual::Individual(Graph * graph, int * chromosome){
     this->graph=graph;
-    this->chromosome=new int[graph->numberofVertics];
-    colorsClass= new list<int>[graph->numberofVertics];
+    this->chromosome=new int[graph->numberofVertics+1];
+    colorsClass= new list<int>[graph->numberofVertics+1];
     int i;
     maxColor=0;
-    for( i=1; i<graph->numberofVertics+1;i++){
+    for( i=1; i<(graph->numberofVertics)+1;i++){
         this->chromosome[i]=chromosome[i];
         colorSet.insert(chromosome[i]);
         if(maxColor<chromosome[i])maxColor=chromosome[i];
@@ -61,7 +65,7 @@ Individual::Individual(Graph * graph, int * chromosome){
     for( i=1; i<graph->numberofVertics+1;i++){
         colorsClass[chromosome[i]].push_back(i);
     }
-    colorsOccurences= new int * [graph->numberofVertics];
+    colorsOccurences= new int * [graph->numberofVertics+1];
     initColorsOccurence();
     fitness=cal_fitness();
 };
@@ -91,7 +95,7 @@ int Individual::classMin(){
 
 int Individual::getNbrChromatique(){
     int max=0;
-    for (int i=1 ; i<graph->numberofVertics ; i++){if (chromosome[i]>max) max=chromosome[i];}
+    for (int i=1 ; i<graph->numberofVertics+1 ; i++){if (chromosome[i]>max) max=chromosome[i];}
     return max;
 }
 
@@ -99,7 +103,7 @@ int Individual::nbBadEdges(){
     int result=0;
     for(auto &i:graph->edges){
          if(chromosome[i.first]==chromosome[i.second]){
-            cout<<"bad edge e "<<i.first<<" "<<i.second<<endl;
+            //cout<<"bad edge e "<<i.first<<" "<<i.second<<endl;
             result++;
         }
     }          
@@ -131,7 +135,7 @@ bool Individual::canColorizeTheVerticByTheColor(int vertic,int color)
     return true;
 }
 
-void Individual::colorizeTheVerticByTheColor(int vertic,int newColor,int oldColor)
+void Individual::colorizeTheVerticByANewColor(int vertic,int newColor,int oldColor)
 {
     colorsClass[oldColor].remove(vertic);
     colorsClass[newColor].push_back(vertic);
@@ -148,7 +152,7 @@ void Individual::createNewColor()
     colorsOccurences[counterForColorsOccurence]=new int [2];
     colorsOccurences[counterForColorsOccurence][0]=x;
     colorsOccurences[counterForColorsOccurence][1]=colorsClass[x].size();
-    cout<<colorsOccurences[counterForColorsOccurence][0]<<" "<<colorsOccurences[counterForColorsOccurence][1]<<endl;
+    //cout<<colorsOccurences[counterForColorsOccurence][0]<<" "<<colorsOccurences[counterForColorsOccurence][1]<<endl;
     counterForColorsOccurence++;
     quicksort_Matrix_Nx2(colorsOccurences,0,counterForColorsOccurence-1);
 }
@@ -167,7 +171,7 @@ void Individual::makeTheColorationEquitableUsingHeuristicMethode(){
                 {
                     if(canColorizeTheVerticByTheColor(vertic,colorsOccurences[j][0]))
                     {  
-                        colorizeTheVerticByTheColor(vertic,colorsOccurences[j][0],colorsOccurences[i][0]);
+                        colorizeTheVerticByANewColor(vertic,colorsOccurences[j][0],colorsOccurences[i][0]);
                         changeMaked=true;
                     }
                 }
@@ -180,6 +184,40 @@ void Individual::makeTheColorationEquitableUsingHeuristicMethode(){
         }
     }
 };
+int Individual::getAVerticFromABadEdge(){
+    for(auto &i:graph->edges){
+         if(chromosome[i.first]==chromosome[i.second]){
+            return(i.first);
+        }
+    }          
+    return 0; 
+};
+
+void Individual::makeTheColorationRealisable(){
+    bool changeMaked=false;
+    int countUselessShuffle;
+    int vertic = getAVerticFromABadEdge();
+    while (vertic)
+    {
+
+        changeMaked=false;
+        
+        for(int j = 0;j<colorSet.size();j++ )
+        {
+            if(canColorizeTheVerticByTheColor(vertic,colorsOccurences[j][0]))
+            {  
+                colorizeTheVerticByANewColor(vertic,colorsOccurences[j][0],chromosome[vertic]);
+                changeMaked=true;
+            }
+        }
+        if(!changeMaked)
+        {
+            createNewColor();
+        }
+        vertic = getAVerticFromABadEdge();
+    }
+};
+
 void Individual::printFitness(){
     cout<<"fitness: "<<this->fitness<<endl;
     
@@ -219,4 +257,5 @@ void Individual::printChromosome(){
     }
     cout<<endl;
 }
+
 #endif
