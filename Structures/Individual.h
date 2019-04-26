@@ -21,6 +21,7 @@ class Individual
         Graph * graph;
         int * chromosome;
         int fitness;
+        int nbrOfBadEdges;
         list<int> * colorsClass;//array of vertics indexed by colors 
         set<int> colorSet;
         int ** colorsOccurences;
@@ -67,7 +68,7 @@ Individual::Individual(Graph * graph, int * chromosome){
     }
     colorsOccurences= new int * [graph->numberofVertics+1];
     initColorsOccurence();
-    fitness=cal_fitness();
+    cal_fitness();
 };
 
 
@@ -103,18 +104,19 @@ int Individual::nbBadEdges(){
     int result=0;
     for(auto &i:graph->edges){
          if(chromosome[i.first]==chromosome[i.second]){
-            //cout<<"bad edge e "<<i.first<<" "<<i.second<<endl;
             result++;
         }
-    }          
+    } 
+    nbrOfBadEdges=result;         
     return result; 
 };
 
 
 
 int Individual::cal_fitness(){
-    int max=0;
-    return nbBadEdges()+(classMax()-classMin());    
+    
+    fitness=nbBadEdges()+(classMax()-classMin());
+    return fitness;    
 };
 
 
@@ -122,7 +124,6 @@ int Individual::cal_fitness(){
 
 
 bool Individual::canColorizeTheVerticByTheColor(int vertic,int color)
-
 {
     if(chromosome[vertic]==color)return false;
     for(auto verticsColoredByColor:colorsClass[color]){
@@ -160,23 +161,40 @@ void Individual::createNewColor()
 void Individual::makeTheColorationEquitableUsingHeuristicMethode(){
     bool changeMaked=false;
     int countUselessShuffle;
-    while ((classMax()-classMin())>1)
+    int oldValue,uselessIteration=0,newValue;
+    newValue=classMax()-classMin();
+    while (newValue>1)
     {
         changeMaked=false;
+        oldValue=newValue;
         for(int i = colorSet.size()-1 ;i>=colorSet.size()/2,colorsOccurences[i][1]==classMax() ;i--)
         {
+            //cout<<"first for loop: "<<i<<"=="<<colorSet.size()/2<<endl;
             for(auto & vertic:colorsClass[colorsOccurences[i][0]])
             {
+                //cout<<"second for loop: "<<vertic<<endl;
                 for(int j = 0;j<=colorSet.size()/2,colorsOccurences[j][1]==classMin();j++ )
                 {
+                    //cout<<"first for loop: "<<j<<"=="<<colorSet.size()/2<<endl;
                     if(canColorizeTheVerticByTheColor(vertic,colorsOccurences[j][0]))
                     {  
+                        //cout<<"can change"<<endl;
                         colorizeTheVerticByANewColor(vertic,colorsOccurences[j][0],colorsOccurences[i][0]);
                         changeMaked=true;
                     }
                 }
                 if(changeMaked)break;
             }
+        }
+        newValue=classMax()-classMin();
+        if(newValue==oldValue)
+        {
+            uselessIteration++;
+        }
+        if(uselessIteration>=70)
+        {
+            cout<<"Exiting because max useless iteration in equitable is exceeded difference between class max is: "<<newValue<<endl;
+            break;
         }
         if(!changeMaked)
         {

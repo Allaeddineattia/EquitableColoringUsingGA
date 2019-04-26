@@ -16,7 +16,7 @@ using namespace std;
 //     int maxIterations;
 //     int maxFitness;
 //     initialisationOptions {
-//                                  bool equitable;
+//                                  bool equitable;//Alert equitable true can engendre runtime error
 //                                  bool feasible;
 //                                  };
 //     void (*mutationMethode)(Individual*);// methode de mutation
@@ -43,21 +43,21 @@ using namespace std;
 
 
 void setOptions(PopulationOptions * op){
-    op->maxFitness=200;
+    op->maxFitness=0;
     op->maxIterations=200;
-    op->mutationRate=50;
+    op->mutationRate=90;// per cent
     op->popsize=50;
     op->initialisationOptions.feasible=true;
     op->initialisationOptions.equitable=true;
-    
-    op->mutationMethode=mutation;
+    op->stopCrterion=IterationExceededOrFitnessEqualToMaxFitnessAndNoBadEdges;
+    op->mutationMethode=makeItFeasibleAndEquitable;
     op->crossOverFunction=crossOverOX1;
     op->selectionFunction=selectBestOfTwo;
     op->childrenIntegrationMethode=integrateChildrenUsingSteadyStateStrategy;
     
 }
 int main(){
-    char nomFichier[255]= "../DSJC1000.1.col";
+    char nomFichier[255]= "../DSJC1000.5.col";
     Graph g(nomFichier);
     PopulationOptions op;
     setOptions(& op);
@@ -74,7 +74,9 @@ int main(){
         cout<<"Non Feasible"<<endl;
     }
     p.train();
-    p.print();
+    p.population[0].printColorSet();
+    cout<<"number of bad edges"<<p.population[0].nbBadEdges()<<endl;
+    cout<<p.population[0].colorSet.size()<<endl;
 }
 
 // int main(){

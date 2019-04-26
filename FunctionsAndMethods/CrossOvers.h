@@ -3,16 +3,16 @@
 #define CROSS_OVERS
 #include"../Structures/Population.h"
 #include "../Structures/Individual.h"
-vector<Individual> crossOverOX1(Individual * parent1,Individual *  parent2 ){
+vector<Individual> crossOverOX1(Individual * parent1,Individual *  parent2 )
+{
+    
     int V =parent1->graph->numberofVertics;
     Graph * g= parent1->graph;
     srand(time(NULL));
     int pivot = rand() % (V-1) + 1 ;
-    cout<<"le pivot: " <<pivot<<endl;
     int chromosome1 [V];
     int chromosome2 [V];
-    for (int i=0; i<parent1->graph->numberofVertics; i++){
-        
+    for (int i=1; i<parent1->graph->numberofVertics+1; i++){
         if (i <= pivot){
             chromosome1[i]=parent1->chromosome[i];
             chromosome2[i]=parent2->chromosome[i];}
