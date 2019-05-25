@@ -1,6 +1,7 @@
-#ifndef FOO_HPP
-#define FOO_HPP
+#ifndef MUTATIONS
+#define MUTATIONS
 #include"../Structures/Individual.h"
+
 void noMutation(Individual * I)
 {
     

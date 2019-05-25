@@ -8,36 +8,38 @@
 #include "Graphe.h"
 #include "../FunctionsAndMethods/operationTableau.h"
 #include <bits/stdc++.h> 
+#include "HeuristicEquitableColorationMethodeOptions.h"
 using namespace std;
 
 class Individual
 {   
-    int * sortedCopie;
+    int * sortedCopie;// of the coloration
     int counterForColorsOccurence;
     void createNewColor();
     void colorizeTheVerticByANewColor(int vertic,int newcolor,int oldColor);
+    void initChromosome(int* chromosome);
+    void initColorClasses();
     public:
-        int maxColor;
+        int maxColor;// the maximum value of colors
         Graph * graph;
-        int * chromosome;
+        int * chromosome;//array reprsenting the coloration
         int fitness;
         int nbrOfBadEdges;
-        list<int> * colorsClass;//array of vertics indexed by colors 
+        list<int> * colorsClass;//each color have a list of vertics wich the vertics are colored by the color 
         set<int> colorSet;
-        int ** colorsOccurences;
+        HeuristicEquitableColorationMethodeOptions heursticMethodeOptions;
+        int ** colorsOccurences;// matrix nx2 wich the first colomn represent the color and the second the number of vertics colored by the color
     //----------------    
-        Individual(Graph * graph, int * chromosome); 
-        int cal_fitness(); 
-        int nbBadEdges();
-        int classMax();
-        int classMin();
-        int getNbrChromatique(); 
-        void initColorsOccurence();  
+        Individual(Graph * graph, int * chromosome,HeuristicEquitableColorationMethodeOptions HeuristicEquitableColorationMethodeOptions); 
+        int cal_fitness();//calculate fitness 
+        int nbBadEdges();// calculate number of bad edges
+        int classMax();//the color that colored the maximum number of vertics
+        int classMin();//the color that colored the minimum number of vertic
+        int getNbrChromatique(); // calculate the chromatic number
+        void initColorsOccurence();   
         bool operator < (const Individual& I2) const{
             return(this->fitness<I2.fitness);
         };
-        void printFitness();
-        void printChromosome();
         void makeTheColorationEquitableUsingHeuristicMethode();
         bool canColorizeTheVerticByTheColor(int vertic,int color);
         int getAVerticFromABadEdge();
@@ -45,6 +47,10 @@ class Individual
         void printColorSet();
         void printColorClasses();
         void printColorOccurence();
+        void printFitness();
+        void printChromosome();
+
+        
          
 };
 
@@ -52,58 +58,62 @@ class Individual
 
 
 
-Individual::Individual(Graph * graph, int * chromosome){
+Individual::Individual(Graph * graph, int * chromosome, 
+HeuristicEquitableColorationMethodeOptions heursticOptions)
+{
     this->graph=graph;
     this->chromosome=new int[graph->numberofVertics+1];
-    colorsClass= new list<int>[graph->numberofVertics+1];
-    int i;
-    maxColor=0;
-    for( i=1; i<(graph->numberofVertics)+1;i++){
-        this->chromosome[i]=chromosome[i];
-        colorSet.insert(chromosome[i]);
-        if(maxColor<chromosome[i])maxColor=chromosome[i];
-    }
-    for( i=1; i<graph->numberofVertics+1;i++){
-        colorsClass[chromosome[i]].push_back(i);
-    }
-    colorsOccurences= new int * [graph->numberofVertics+1];
+    this->heursticMethodeOptions=heursticOptions;
+    initChromosome(chromosome);
+    initColorClasses();
     initColorsOccurence();
     cal_fitness();
 };
 
+void Individual::initChromosome(int* chromosome)
+{
+    maxColor=0;
+    for(int i=1; i<(graph->numberofVertics)+1;i++){
+        this->chromosome[i]=chromosome[i];
+        colorSet.insert(chromosome[i]);
+        if(maxColor<chromosome[i])maxColor=chromosome[i];
+    }
+};
 
+void Individual::initColorClasses()
+{
+    colorsClass= new list<int>[graph->numberofVertics+1];
+    for(int i=1; i<graph->numberofVertics+1;i++){
+        colorsClass[chromosome[i]].push_back(i);
+    }
+};
 
-void Individual::initColorsOccurence(){
-
-    
+void Individual::initColorsOccurence()
+{
+    colorsOccurences= new int * [graph->numberofVertics+1];
     counterForColorsOccurence=0;
-    for(auto x:colorSet){
+    for(auto color:colorSet)//for each color in color set
+    {
         colorsOccurences[counterForColorsOccurence]=new int [2];
-        colorsOccurences[counterForColorsOccurence][0]=x;
-        colorsOccurences[counterForColorsOccurence][1]=colorsClass[x].size();
+        colorsOccurences[counterForColorsOccurence][0]=color;
+        colorsOccurences[counterForColorsOccurence][1]=colorsClass[color].size();
         counterForColorsOccurence++;
     }
     quicksort_Matrix_Nx2(colorsOccurences,0,counterForColorsOccurence-1);
 };
 
-int Individual::classMax(){
-    return colorsOccurences[colorSet.size()-1][1];
-}
-
-int Individual::classMin(){
-    return colorsOccurences[0][1];
-}
-
-int Individual::getNbrChromatique(){
-    int max=0;
-    for (int i=1 ; i<graph->numberofVertics+1 ; i++){if (chromosome[i]>max) max=chromosome[i];}
-    return max;
-}
+int Individual::cal_fitness()
+{
+    fitness=nbBadEdges()+(classMax()-classMin());
+    return fitness;    
+};
 
 int Individual::nbBadEdges(){
     int result=0;
-    for(auto &i:graph->edges){
-         if(chromosome[i.first]==chromosome[i.second]){
+    for(auto &i:graph->edges)
+    {
+         if(chromosome[i.first]==chromosome[i.second])
+         {
             result++;
         }
     } 
@@ -111,28 +121,35 @@ int Individual::nbBadEdges(){
     return result; 
 };
 
+int Individual::classMax()
+{
+    return colorsOccurences[colorSet.size()-1][1];
+}
+
+int Individual::classMin()
+{
+    return colorsOccurences[0][1];
+}
 
 
-int Individual::cal_fitness(){
-    
-    fitness=nbBadEdges()+(classMax()-classMin());
-    return fitness;    
-};
-
-
-
+int Individual::getNbrChromatique(){
+    int max=0;
+    for (int i=1 ; i<graph->numberofVertics+1 ; i++){if (chromosome[i]>max) max=chromosome[i];}
+    return max;
+}
 
 
 bool Individual::canColorizeTheVerticByTheColor(int vertic,int color)
 {
     if(chromosome[vertic]==color)return false;
-    for(auto verticsColoredByColor:colorsClass[color]){
-        for(auto verticsPairedToVertic:graph->adj[vertic]){
-            if (verticsColoredByColor==verticsPairedToVertic)
+    for(auto aVerticColoredByColor:colorsClass[color])
+    {
+        for(auto aVerticPairedToVertic:graph->adj[vertic])
+        {
+            if (aVerticColoredByColor==aVerticPairedToVertic)
             return false;
         }
     }
-    
     return true;
 }
 
@@ -142,7 +159,7 @@ void Individual::colorizeTheVerticByANewColor(int vertic,int newColor,int oldCol
     colorsClass[newColor].push_back(vertic);
     chromosome[vertic]=newColor;
     initColorsOccurence();
-    quicksort_Matrix_Nx2(colorsOccurences,0,counterForColorsOccurence-1);
+    //quicksort_Matrix_Nx2(colorsOccurences,0,counterForColorsOccurence-1);
 }
 
 void Individual::createNewColor()
@@ -158,12 +175,14 @@ void Individual::createNewColor()
     quicksort_Matrix_Nx2(colorsOccurences,0,counterForColorsOccurence-1);
 }
 
-void Individual::makeTheColorationEquitableUsingHeuristicMethode(){
+void Individual::makeTheColorationEquitableUsingHeuristicMethode()
+{
     bool changeMaked=false;
     int countUselessShuffle;
     int oldValue,uselessIteration=0,newValue;
     newValue=classMax()-classMin();
-    while (newValue>1)
+    int maxColorToAddWhenIterationExceeded=0;
+    while (newValue>heursticMethodeOptions.differenceBetweenClasses )
     {
         changeMaked=false;
         oldValue=newValue;
@@ -187,15 +206,24 @@ void Individual::makeTheColorationEquitableUsingHeuristicMethode(){
             }
         }
         newValue=classMax()-classMin();
+
         if(newValue==oldValue)
         {
             uselessIteration++;
         }
-        if(uselessIteration>=70)
+        if(uselessIteration>=heursticMethodeOptions.maxUselessIteration)
         {
-            cout<<"Exiting because max useless iteration in equitable is exceeded difference between class max is: "<<newValue<<endl;
-            break;
+            if(maxColorToAddWhenIterationExceeded<heursticMethodeOptions.maxNewColorstoAddWhenMAxUselessiterationIsExceeded){
+                createNewColor();
+                maxColorToAddWhenIterationExceeded++;
+            }
+            else{
+                cout<<"Exiting because max useless iteration wish is \""<<heursticMethodeOptions.maxUselessIteration<<"\" is exceeded difference between class max is: "<<newValue<<" and numberColorAdded is "<<maxColorToAddWhenIterationExceeded<<endl;
+                break;
+            }
+            
         }
+
         if(!changeMaked)
         {
             createNewColor();
@@ -203,8 +231,10 @@ void Individual::makeTheColorationEquitableUsingHeuristicMethode(){
     }
 };
 int Individual::getAVerticFromABadEdge(){
-    for(auto &i:graph->edges){
-         if(chromosome[i.first]==chromosome[i.second]){
+    for(auto &i:graph->edges)
+    {
+        if(chromosome[i.first]==chromosome[i.second])
+        {
             return(i.first);
         }
     }          

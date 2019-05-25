@@ -12,10 +12,10 @@ using namespace std;
 // A class that represents an undirected graph
 class Graph
 {
-    int V; // No. of vertices
+    int V; //array range (No. of vertices+1)
     public:
-    int numberofVertics;
-    list<pair<int,int>> edges;
+    int numberofVertics; // No. of vertices
+    list<pair<int,int>> edges;// a list of paires representing the edges
 	list<int> *adj; // A dynamic array of adjacency lists
     int *GR;
     int *PW;
@@ -27,11 +27,14 @@ class Graph
     //Adjency matrix
 
 	// Constructor and destructor
-	Graph(int V) { 
+	Graph(int V) 
+    { 
     this->V = V+1;
     numberofVertics=V;
-    adj = new list<int>[V+1]; }
-    Graph(char fileName[255] ){
+    adj = new list<int>[V+1]; 
+    }
+    Graph(char fileName[255] )
+    {
         strcpy(this->fileName,fileName);
         this->construire(fileName);
     }
@@ -78,7 +81,7 @@ int sommet (string chaine,int ordre){
 
 void Graph::addEdge(int v, int w)
 {
-    edges.push_back({v,w});
+    edges.push_back({v,w});//adding the pair of vertics to the list of edges
 	adj[v].push_back(w);
 	adj[w].push_back(v); // Note: the graph is undirected
 }
@@ -262,12 +265,12 @@ int Graph::printPWMax(){
 }
 
 void Graph::randomColoring(int v){
-
+    //initialsing the random function
     srand(time(NULL)+v);
     RandColors= new int[V];
     RandColors[0]=0;
     for (int i=1;i<V;i++) {
-        RandColors[i]= rand() % chromaticNumber+1;   
+        RandColors[i]= rand() % chromaticNumber+1;//Assigning random colors to vertics  
     }
 };
 

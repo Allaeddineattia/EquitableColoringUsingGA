@@ -1,5 +1,5 @@
-#ifndef MUTATIONS
-#define MUTATIONS
+#ifndef CHILDRENS_INTEGRATION_STRATEGIES
+#define CHILDRENS_INTEGRATION_STRATEGIES
 #include "../Structures/Population.h"
 #include "../Structures/Individual.h"
 void integrateChildrenUsingSteadyStateStrategy( Population *p,vector<Individual> childrens)

@@ -21,11 +21,11 @@ vector<Individual> crossOverOX1(Individual * parent1,Individual *  parent2 )
             }
     }
     vector<Individual>  childrens;
-    Individual child1(g, chromosome1);
-    Individual child2(g, chromosome2);
+    Individual child1(g, chromosome1,parent1->heursticMethodeOptions);
+    Individual child2(g, chromosome2,parent1->heursticMethodeOptions);
     childrens.push_back(child1);
     childrens.push_back(child2);
-    cout<<childrens.size()<<endl;
+    //cout<<childrens.size()<<endl;
     return childrens;
 }
 #endif

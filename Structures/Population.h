@@ -3,28 +3,7 @@
 #define POPULATION
 #include "Individual.h"
 #include <bits/stdc++.h> 
-
-class Population;
-
-typedef struct InitialisationOptions
-{
-    bool equitable;
-    bool feasible;
-}InitialisationOptions;
-
-typedef struct PopulationOptions
-{
-    int popsize;
-    int mutationRate;
-    int maxIterations;
-    int maxFitness;
-    InitialisationOptions initialisationOptions;
-    void (*mutationMethode)(Individual*);
-    vector<Individual> (*crossOverFunction)(Individual*,Individual*);
-    Individual* (*selectionFunction)(Population *);
-    void (*childrenIntegrationMethode) (Population *,vector<Individual>) ;
-    bool (*stopCrterion)(Population*);  
-} PopulationOptions;
+#include "PopulationOptions.h"
 
 
 class Population
@@ -51,11 +30,11 @@ void Population::mutateChildrens(vector<Individual> childrens){
     for(auto & children:childrens)
     {
         int v=rand() % 100+1;
-        if (v<=(parameters->mutationRate))
+        if (v<=(parameters->trainOptions.mutationRate))
         {
             cout<<"before mutaion bad edges: "<<children.nbBadEdges()<<" fitness: "<<children.fitness<<endl;
-            parameters->mutationMethode(&children);
-            cout<<"before mutaion bad edges: "<<children.nbBadEdges()<<" fitness: "<<children.fitness<<endl;
+            parameters->trainOptions.mutationMethode(&children);
+            cout<<"after mutaion bad edges: "<<children.nbBadEdges()<<" fitness: "<<children.fitness<<endl;
         }
     }
 };
@@ -73,8 +52,8 @@ void Population::initPopulation()
     int v=10;
     graph->greedyColoring();
     graph->powellWelshColoring();
-    Individual TPW(graph,graph->PW);
-    Individual TGR(graph,graph->GR);
+    Individual TPW(graph,graph->PW,parameters->heuristicEquitableColorationMethodeOptions);
+    Individual TGR(graph,graph->GR,parameters->heuristicEquitableColorationMethodeOptions);
     TGR.makeTheColorationEquitableUsingHeuristicMethode();
     TPW.makeTheColorationEquitableUsingHeuristicMethode();
     graph->chromaticNumber=TGR.colorSet.size()>TPW.colorSet.size()?TGR.colorSet.size():TPW.colorSet.size();
@@ -82,7 +61,7 @@ void Population::initPopulation()
         cout<<"Size of the Population: "<<size<<endl;
         v+=10;
         graph->randomColoring(v);
-        Individual randomI(graph,graph->RandColors);
+        Individual randomI(graph,graph->RandColors,parameters->heuristicEquitableColorationMethodeOptions);
         if(parameters->initialisationOptions.feasible) 
         {
             cout<<"Making the coloration feasible."<<endl;
@@ -109,13 +88,13 @@ void Population::addIndividual(Individual I)
 void Population::train()
 {
     initPopulation();
-    while(!parameters->stopCrterion(this))
+    while(!parameters->trainOptions.stopCrterion(this))
     {
-        Individual * parent1= parameters->selectionFunction(this);
-        Individual * parent2= parameters->selectionFunction(this);
-        vector<Individual> childrens = parameters->crossOverFunction(parent1,parent2);
+        Individual * parent1= parameters->trainOptions.selectionFunction(this);
+        Individual * parent2= parameters->trainOptions.selectionFunction(this);
+        vector<Individual> childrens = parameters->trainOptions.crossOverFunction(parent1,parent2);
         this->mutateChildrens(childrens);
-        parameters->childrenIntegrationMethode(this,childrens);
+        parameters->trainOptions.childrenIntegrationMethode(this,childrens);
         numberOfIterations++;
         cout<<"Iteration: "<<numberOfIterations<<endl;
     }
