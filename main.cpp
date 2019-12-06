@@ -16,10 +16,10 @@ void setOptions(PopulationOptions * op){
     op->initialisationOptions.equitable=false;
     
     op->heuristicEquitableColorationMethodeOptions.differenceBetweenClasses=0;
-    op->heuristicEquitableColorationMethodeOptions.maxUselessIteration=100;
+    op->heuristicEquitableColorationMethodeOptions.maxUselessIteration=50;
     op->heuristicEquitableColorationMethodeOptions.maxNewColorstoAddWhenMAxUselessiterationIsExceeded=10;
     
-    op->trainOptions.maxIterations=200;
+    op->trainOptions.maxIterations=100;
     op->trainOptions.mutationRate=90;// per cent
     op->trainOptions.stopCrterion=IterationExceededOrFitnessEqualToMaxFitnessAndNoBadEdges;
     op->trainOptions.mutationMethode=makeItFeasibleAndEquitable;
@@ -48,6 +48,7 @@ int main(){
     p.train();
     p.population[0].printColorSet();
     cout<<"number of bad edges"<<p.population[0].nbBadEdges()<<endl;
-    cout<<p.population[0].colorSet.size()<<endl;
+    cout<<"result"<<endl;
+    p.population[0].print();
 }
 

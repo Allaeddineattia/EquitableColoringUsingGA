@@ -19,24 +19,33 @@ class Population
     void initPopulation();
     void addIndividual(Individual I);
     void train();
-    void mutateChildrens(vector<Individual> childrens);
+    vector<Individual> mutateChildrens(vector<Individual> childrens);
     void print();
     void sortPopulationByFitness();
 };
 
 
-void Population::mutateChildrens(vector<Individual> childrens){
+vector<Individual> Population::mutateChildrens(vector<Individual> childrens){
     srand(time(NULL)+10);
+    vector<Individual> result;
     for(auto & children:childrens)
     {
         int v=rand() % 100+1;
         if (v<=(parameters->trainOptions.mutationRate))
         {
-            cout<<"before mutaion bad edges: "<<children.nbBadEdges()<<" fitness: "<<children.fitness<<endl;
+            // cout<<"before mutaion bad edges: ";
+            // children.print();
             parameters->trainOptions.mutationMethode(&children);
-            cout<<"after mutaion bad edges: "<<children.nbBadEdges()<<" fitness: "<<children.fitness<<endl;
+            // cout<<"after mutaion bad edges: "<<endl;
+            // children.print();
         }
+        result.push_back(children);
     }
+    cout<<"New childrens Are: "<<endl;
+    for(auto & children:result){
+        children.print();
+    }
+    return result;
 };
 
 
@@ -50,15 +59,24 @@ void Population::initPopulation()
 {
     cout<<"Initializing the Population"<<endl;
     int v=10;
+    cout<<"Coloring the graph using the greed way "<<endl;
     graph->greedyColoring();
+    cout<<"Coloring the graph using the powerWelsh way "<<endl;
     graph->powellWelshColoring();
+    cout<<"Creating an individual based on PW coloring"<<endl;
     Individual TPW(graph,graph->PW,parameters->heuristicEquitableColorationMethodeOptions);
+    cout<<"Creating an individual based on Creedy coloring"<<endl;
     Individual TGR(graph,graph->GR,parameters->heuristicEquitableColorationMethodeOptions);
     TGR.makeTheColorationEquitableUsingHeuristicMethode();
+    cout<<"Chromatique number of Greedy after making it Equitable: "<<TGR.colorSet.size()<<endl;
     TPW.makeTheColorationEquitableUsingHeuristicMethode();
+    cout<<"Chromatique number of PW after making it Equitable: "<<TPW.colorSet.size()<<endl;
     graph->chromaticNumber=TGR.colorSet.size()>TPW.colorSet.size()?TGR.colorSet.size():TPW.colorSet.size();
-    while(size<=parameters->popsize){
-        cout<<"Size of the Population: "<<size<<endl;
+    population.push_back(TPW);
+    population.push_back(TPW);
+    size += 2;
+    while(size<parameters->popsize){
+        cout<<"Creating Member of population number: "<<size<<endl;
         v+=10;
         graph->randomColoring(v);
         Individual randomI(graph,graph->RandColors,parameters->heuristicEquitableColorationMethodeOptions);
@@ -93,10 +111,11 @@ void Population::train()
         Individual * parent1= parameters->trainOptions.selectionFunction(this);
         Individual * parent2= parameters->trainOptions.selectionFunction(this);
         vector<Individual> childrens = parameters->trainOptions.crossOverFunction(parent1,parent2);
-        this->mutateChildrens(childrens);
-        parameters->trainOptions.childrenIntegrationMethode(this,childrens);
+        vector<Individual> mutatedChildrens = this->mutateChildrens(childrens);
+        parameters->trainOptions.childrenIntegrationMethode(this,mutatedChildrens);
         numberOfIterations++;
-        cout<<"Iteration: "<<numberOfIterations<<endl;
+        cout<<"Iteration: "<<numberOfIterations<<": "<<this->population[0].colorSet.size()<<endl;
+        cout<<"New populotion:"<<endl; this->print();
     }
 };
 
@@ -111,6 +130,11 @@ void Population::train()
 // Compares two intervals according to staring times. 
 bool compareIndividual(Individual i1, Individual  i2) 
 { 
+    i1.cal_fitness();
+    i2.cal_fitness();
+    if(i1.fitness == i2.fitness){
+        return (i1.colorSet.size()<i2.colorSet.size());
+    }
     return (i1.fitness < i2.fitness); 
 } 
 
@@ -124,10 +148,10 @@ void Population::print()
     int count=1;
     for(auto& i : population)
     {   
-        cout<<"individue"<<count<<": chromaticnumber "<<i.colorSet.size()<<" nb bad edges:"<<i.nbBadEdges()<<"{"<<endl;
+        i.print();
         count++;        
-        i.printColorClasses();
-        cout<<"}"<<endl<<endl;
+        //i.printColorClasses();
+        //cout<<"}"<<endl<<endl;
     }
 
 }

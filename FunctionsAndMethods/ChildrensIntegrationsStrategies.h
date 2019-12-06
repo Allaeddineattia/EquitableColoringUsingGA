@@ -8,7 +8,13 @@ void integrateChildrenUsingSteadyStateStrategy( Population *p,vector<Individual>
     {
         p->population.push_back(children);
     } 
+    // cout<<"Before sorting"<<endl;
+    // p->print();
     p->sortPopulationByFitness();
-    p->population.erase(p->population.begin()+p->parameters->popsize, p->population.end());
+    //cout<<"After sorting"<<endl;
+    //p->print();
+    p->population.erase((p->population.begin())+(p->parameters->popsize), p->population.end());
+    //cout<<"After deleting"<<endl;
+    //p->print();
 }
 #endif

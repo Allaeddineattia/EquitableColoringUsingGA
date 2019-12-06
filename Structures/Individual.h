@@ -49,6 +49,7 @@ class Individual
         void printColorOccurence();
         void printFitness();
         void printChromosome();
+        void print();
 
         
          
@@ -104,7 +105,7 @@ void Individual::initColorsOccurence()
 
 int Individual::cal_fitness()
 {
-    fitness=nbBadEdges()+(classMax()-classMin());
+    fitness=nbBadEdges() + (classMax()-classMin());
     return fitness;    
 };
 
@@ -218,7 +219,7 @@ void Individual::makeTheColorationEquitableUsingHeuristicMethode()
                 maxColorToAddWhenIterationExceeded++;
             }
             else{
-                cout<<"Exiting because max useless iteration wish is \""<<heursticMethodeOptions.maxUselessIteration<<"\" is exceeded difference between class max is: "<<newValue<<" and numberColorAdded is "<<maxColorToAddWhenIterationExceeded<<endl;
+                //cout<<"Exiting because max useless iteration wish is \""<<heursticMethodeOptions.maxUselessIteration<<"\" is exceeded difference between class max is: "<<newValue<<" and numberColorAdded is "<<maxColorToAddWhenIterationExceeded<<endl;
                 break;
             }
             
@@ -229,6 +230,7 @@ void Individual::makeTheColorationEquitableUsingHeuristicMethode()
             createNewColor();
         }
     }
+    this->cal_fitness();
 };
 int Individual::getAVerticFromABadEdge(){
     for(auto &i:graph->edges)
@@ -304,6 +306,9 @@ void Individual::printChromosome(){
         if(i%9==0)cout<<endl;
     }
     cout<<endl;
+}
+void Individual::print(){
+    cout<<"individue"<<": chromaticnumber "<<colorSet.size()<<", nb bad edges:"<<this->nbBadEdges()<<", class difference: "<<this->classMax()-this->classMin()<<", fitness:"<<cal_fitness()<<endl;
 }
 
 #endif
